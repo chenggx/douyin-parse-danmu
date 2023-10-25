@@ -75,6 +75,7 @@ class TestTest extends Command
                 'User-Agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36',
                 'cookie' => '__ac_nonce=0638733a400869171be51',
             ]
+            'verify' => false
         ]);
     }
 
