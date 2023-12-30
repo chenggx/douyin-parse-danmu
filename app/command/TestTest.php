@@ -73,7 +73,7 @@ class TestTest extends Command
             'headers' => [
                 'accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
                 'User-Agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36',
-                'cookie' => '__ac_nonce=0638733a400869171be51',
+                'cookie' => 'ttwid=1%7C1g-HrGfzSYZaXrmDGn9w5e0gmJDn5Hkz8yTQx3tXY6o%7C1679877535%7C3baa4f9d7da4861135dcff464e44ab5ee31293bf67dfed370995982862d3466e; store-region=cn-ha; store-region-src=uid; __ac_nonce=0658a92d5000cb2bc2904;',
             ],
             'verify' => false
         ]);
