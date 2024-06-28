@@ -10,10 +10,6 @@
 基于<a href="https://www.workerman.net" target="__blank">workerman</a>开发的超高性能PHP框架
 
 
-## 系统要求
-1. PHP >= 7.2
-
-
 ## 使用方法
 1. 进入 websdk 目录，安装依赖 npm install
 ```bash
