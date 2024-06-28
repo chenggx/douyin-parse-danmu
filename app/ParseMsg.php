@@ -45,7 +45,7 @@ class ParseMsg
 
         $intInternalExt = $payloadPackage->getInternalExt();
 
-        if ($payloadPackage->getNeedAck() == true) {
+        if ($payloadPackage->getNeedAck()) {
             self::sendAck($con, $logId, $intInternalExt);
         }
 
