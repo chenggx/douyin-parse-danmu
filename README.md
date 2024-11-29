@@ -56,6 +56,11 @@ docker build -t dy-danmu .
 docker run -d -p 4200:4200 dy-danmu
 ```
 
+镜像已经上传 dockerHub  可以直接使用如下命令，拉取并运行
+```bash
+    docker run -d -p 4200:4200  chenggx/dy-danmu
+```
+
 3. 访问
 
 可以直接在本机访问 ws:127.0.0.1:4200
