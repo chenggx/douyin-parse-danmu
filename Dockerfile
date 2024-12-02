@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     git
 # 安装 PHP 扩展
-RUN docker-php-ext-install pcntl
+RUN docker-php-ext-install pcntl bcmath
 
 # 安装 Node.js 和 npm
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
