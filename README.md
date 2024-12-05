@@ -57,6 +57,11 @@ docker build -t dy-danmu .
 docker run -d -p 4200:4200 dy-danmu
 ```
 
+镜像已经上传 dockerHub  可以直接使用如下命令，拉取并运行
+```bash
+    docker run -d -p 4200:4200  chenggx/dy-danmu
+```
+
 使用代理的方式启动服务
 ```bash
 docker run -e HTTP_PROXY=http://用户名:密码@代理地址:端口号 \
