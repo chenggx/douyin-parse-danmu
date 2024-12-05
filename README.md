@@ -52,8 +52,18 @@ docker build -t dy-danmu .
 
 2. 启动容器
 
+直接启动服务
 ```bash
 docker run -d -p 4200:4200 dy-danmu
+```
+
+使用代理的方式启动服务
+```bash
+docker run -e HTTP_PROXY=http://用户名:密码@代理地址:端口号 \
+           -e HTTPS_PROXY=http://用户名:密码@代理地址:端口号 \
+           -e NO_PROXY=localhost,127.0.0.1 \
+           -d \
+           -p 4200:4200 dy-danmu
 ```
 
 3. 访问
