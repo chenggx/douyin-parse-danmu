@@ -35,7 +35,7 @@ jobs:
       run: |
         echo "Starting WebSocket test..."
         touch output/test_result.txt  # 确保文件存在
-        wscat -c ws://127.0.0.1:4201 -x "{\"url\":\"https://live.douyin.com/208823316033\"}" -w 5 > output/test_result.txt
+        wscat -c ws://127.0.0.1:4200 -x "{\"url\":\"https://live.douyin.com/208823316033\"}" -w 5 > output/test_result.txt
 
         echo "===== 测试结果文件内容 ====="
         cat output/test_result.txt
