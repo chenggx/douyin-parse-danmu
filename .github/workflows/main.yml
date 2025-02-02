@@ -23,9 +23,15 @@ jobs:
 
     - name: Install websocat
       run: |
-        sudo apt-get update
-        sudo apt-get install -y snapd
-        sudo snap install websocat
+        # 方法一：使用预编译二进制（推荐）
+        wget https://github.com/vi/websocat/releases/download/v1.12.0/websocat_linux64
+        sudo mv websocat_linux64 /usr/local/bin/websocat
+        sudo chmod +x /usr/local/bin/websocat
+
+        # 方法二：或者使用 apt 安装（需启用 universe 仓库）
+        # sudo add-apt-repository universe
+        # sudo apt-get update
+        # sudo apt-get install -y websocat
 
     - name: Wait for service
       timeout-minutes: 2
