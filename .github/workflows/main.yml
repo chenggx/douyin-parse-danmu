@@ -2,65 +2,34 @@ name: Daily WebSocket Test
 
 on:
   schedule:
-    - cron: '0 2 * * *'  # UTC 时间每天 2 点执行（对应北京时间 10 点）
-  workflow_dispatch:
+    - cron: '0 10 * * *'  # 每天10点运行
+  workflow_dispatch:  # 允许手动触发
 
 jobs:
-  test-websocket:
+  test:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v2
 
-    - name: Set up Docker
+    - name: Build and start Docker container
       run: |
-        docker build -t websocket-test .
+        docker build -t dy-danmu .
+        docker run -d -p 4200:4200 dy-danmu
+        sleep 30  # 等待服务完全启动
 
-    - name: Run container in background
+    - name: Install wscat
+      run: npm install -g wscat
+
+    - name: Create output directory
+      run: mkdir -p output
+
+    - name: Test WebSocket connection
       run: |
-        docker run -d -p 4200:4200 --name running-test websocket-test
+        wscat -c ws://127.0.0.1:4200 -x '{"url":"https://live.douyin.com/208823316033"}' | head -n 10 > output/test_result.txt
 
-    - name: Install websocat
-      run: |
-        # 方法一：使用预编译二进制（推荐）
-        wget https://github.com/vi/websocat/releases/download/v1.12.0/websocat_linux64
-        sudo mv websocat_linux64 /usr/local/bin/websocat
-        sudo chmod +x /usr/local/bin/websocat
-
-        # 方法二：或者使用 apt 安装（需启用 universe 仓库）
-        # sudo add-apt-repository universe
-        # sudo apt-get update
-        # sudo apt-get install -y websocat
-
-    - name: Wait for service
-      timeout-minutes: 2
-      run: |
-        for i in {1..10}; do
-          if nc -z localhost 4200; then
-            echo "Service is up!"
-            exit 0
-          fi
-          sleep 5
-        done
-        echo "Service failed to start"
-        exit 1
-
-    - name: Run WebSocket test
-      run: |
-        mkdir -p output
-        echo '{"url":"https://live.douyin.com/208823316033"}' | \
-        websocat -t 10 ws://localhost:4200 | \
-        head -n 10 > output/result.txt
-
-    - name: Save results
-      uses: actions/upload-artifact@v4
+    - name: Upload test results
+      uses: actions/upload-artifact@v2
       with:
-        name: websocket-results
+        name: test-results
         path: output/
-
-    - name: Cleanup
-      if: always()
-      run: |
-        docker stop running-test || true
-        docker rm running-test || true
