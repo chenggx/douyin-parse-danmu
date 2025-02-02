@@ -1,29 +1,47 @@
-name: Daily Job
+name: Daily WebSocket Test
 
 on:
   schedule:
-    - cron: '0 2 * * *'  # UTC时间2点（北京时间10点）
-      timezone: 'Asia/Shanghai'
-  push:
-    branches: [main]
+    - cron: '0 2 * * *'  # UTC 时间每天 2 点执行（对应北京时间 10 点）
+  workflow_dispatch:
 
 jobs:
-  build-and-run:
+  test-websocket:
     runs-on: ubuntu-latest
-    
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v2
+    - name: Set up Docker
+      run: |
+        docker build -t websocket-test .
 
-      - name: Build Docker image
-        run: docker build -t my-daily-app .
+    - name: Run container in background
+      run: |
+        docker run -d -p 4200:4200 --name running-test websocket-test
 
-      - name: Run container
-        run: |
-          docker run --rm \
-          -e TZ=Asia/Shanghai \
-          my-daily-app \
-          sh -c "/usr/local/bin/start.sh"
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y websocat
+
+    - name: Wait for service
+      run: |
+        sleep 15  # 等待服务启动
+
+    - name: Run WebSocket test
+      run: |
+        mkdir -p output
+        echo '{"url":"https://live.douyin.com/208823316033"}' | websocat -t 10 ws://localhost:4200 | head -n 10 > output/result.txt
+
+    - name: Save results
+      uses: actions/upload-artifact@v3
+      with:
+        name: websocket-results
+        path: output/
+
+    - name: Cleanup
+      run: |
+        docker stop running-test
+        docker rm running-test
