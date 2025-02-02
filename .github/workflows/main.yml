@@ -2,8 +2,8 @@ name: Daily WebSocket Test
 
 on:
   schedule:
-    - cron: '0 10 * * *'  # 每天10点运行
-  workflow_dispatch:  # 允许手动触发
+    - cron: '0 10 * * *'
+  workflow_dispatch:
 
 jobs:
   test:
@@ -15,28 +15,38 @@ jobs:
     - name: Build and start Docker container
       run: |
         docker build -t dy-danmu .
-        docker run -d -p 4200:4200 dy-danmu
-        sleep 30  # 等待服务完全启动
+        docker stop dy-danmu-container || true
+        docker rm dy-danmu-container || true
+        docker run -d --name dy-danmu-container -p 4200:4200 dy-danmu
+
+    - name: Wait for service to start
+      run: timeout 60 bash -c 'until nc -z 127.0.0.1 4200; do sleep 2; done'
 
     - name: Install wscat
       run: npm install -g wscat
 
     - name: Create output directory
-      run: mkdir -p output
+      run: |
+        mkdir -p output
+        echo "当前目录结构：" && ls -l
+        echo "Output目录已创建：" && ls -l output/
 
     - name: Test WebSocket connection
       run: |
         echo "Starting WebSocket test..."
-        # 尝试建立WebSocket连接并等待响应
-        timeout 60 wscat -c ws://127.0.0.1:4200 -x '{"url":"https://live.douyin.com/208823316033"}' > output/test_result.txt || {
-          echo "WebSocket connection failed or timed out"
-          cat output/test_result.txt
-          exit 1
-        }
-        
-        # 检查输出文件
-        echo "WebSocket test completed. Output content:"
+        touch output/test_result.txt  # 确保文件存在
+        wscat -c ws://127.0.0.1:4200 \
+          -x '{"url":"https://live.douyin.com/208823316033"}' \
+          -w 5 --execute 'close' > output/test_result.txt || true
+
+        echo "===== 测试结果文件内容 ====="
         cat output/test_result.txt
+        echo "============================"
+
+        if [ ! -s output/test_result.txt ]; then
+          echo "❌ 错误：测试结果文件为空"
+          exit 1
+        fi
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
