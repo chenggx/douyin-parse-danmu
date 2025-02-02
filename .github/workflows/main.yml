@@ -11,7 +11,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up Docker
       run: |
@@ -21,27 +21,40 @@ jobs:
       run: |
         docker run -d -p 4200:4200 --name running-test websocket-test
 
-    - name: Install dependencies
+    - name: Install websocat
       run: |
         sudo apt-get update
-        sudo apt-get install -y websocat
+        sudo apt-get install -y snapd
+        sudo snap install websocat
 
     - name: Wait for service
+      timeout-minutes: 2
       run: |
-        sleep 15  # 等待服务启动
+        for i in {1..10}; do
+          if nc -z localhost 4200; then
+            echo "Service is up!"
+            exit 0
+          fi
+          sleep 5
+        done
+        echo "Service failed to start"
+        exit 1
 
     - name: Run WebSocket test
       run: |
         mkdir -p output
-        echo '{"url":"https://live.douyin.com/208823316033"}' | websocat -t 10 ws://localhost:4200 | head -n 10 > output/result.txt
+        echo '{"url":"https://live.douyin.com/208823316033"}' | \
+        websocat -t 10 ws://localhost:4200 | \
+        head -n 10 > output/result.txt
 
     - name: Save results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: websocket-results
         path: output/
 
     - name: Cleanup
+      if: always()
       run: |
-        docker stop running-test
-        docker rm running-test
+        docker stop running-test || true
+        docker rm running-test || true
