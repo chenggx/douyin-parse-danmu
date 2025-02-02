@@ -26,7 +26,17 @@ jobs:
 
     - name: Test WebSocket connection
       run: |
-        wscat -c ws://127.0.0.1:4200 -x '{"url":"https://live.douyin.com/208823316033"}' | head -n 10 > output/test_result.txt
+        echo "Starting WebSocket test..."
+        # 尝试建立WebSocket连接并等待响应
+        timeout 60 wscat -c ws://127.0.0.1:4200 -x '{"url":"https://live.douyin.com/208823316033"}' > output/test_result.txt || {
+          echo "WebSocket connection failed or timed out"
+          cat output/test_result.txt
+          exit 1
+        }
+        
+        # 检查输出文件
+        echo "WebSocket test completed. Output content:"
+        cat output/test_result.txt
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
