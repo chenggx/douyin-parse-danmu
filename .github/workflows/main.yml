@@ -1,0 +1,29 @@
+name: Daily Job
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # UTC时间2点（北京时间10点）
+      timezone: 'Asia/Shanghai'
+  push:
+    branches: [main]
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Docker image
+        run: docker build -t my-daily-app .
+
+      - name: Run container
+        run: |
+          docker run --rm \
+          -e TZ=Asia/Shanghai \
+          my-daily-app \
+          sh -c "/usr/local/bin/start.sh"
