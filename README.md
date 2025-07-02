@@ -83,3 +83,10 @@ ws://47.96.139.114:4200
 # 另外还有小红书发布视频，图片发布接口，需要可以直接联系
 
 ![联系方式](wechat.jpg)
+
+
+# 本项目 CDN 加速及安全防护由 Tencent EdgeOne 赞助
+
+<a href="https://edgeone.ai/zh?from=github" target="__blank">官网链接</a>
+
+![Tencent EdgeOne](edgeOne.png)
