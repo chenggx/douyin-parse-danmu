@@ -40,7 +40,7 @@ jobs:
         echo "=== Starting WebSocket test at $(date) ==="
 
         timeout 60 wscat -c ws://127.0.0.1:4200 \
-          -x '{"url":"https://live.douyin.com/915444250844"}' \
+          -x '{"url":"https://live.douyin.com/234056853114"}' \
           > output/test_result.txt 2>&1
 
         WS_EXIT_CODE=$?
