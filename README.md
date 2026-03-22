@@ -82,3 +82,4 @@ docker run -e HTTP_PROXY=http://用户名:密码@代理地址:端口号 \
 <a href="https://edgeone.ai/zh?from=github" target="__blank">官网链接</a>
 
 ![Tencent EdgeOne](edgeOne.png)
+### 2026-03-22 更新：弹幕抓取失败
