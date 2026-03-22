@@ -2,7 +2,7 @@ name: Daily WebSocket Test with Notification
 
 on:
   schedule:
-    - cron: '0 10 * * *'  # 每天10点运行 (UTC)
+    - cron: '0 8 * * *'  # 每天8点运行 (UTC)，北京时间16点
   workflow_dispatch:       # 允许手动触发
 
 jobs:
