@@ -1,0 +1,125 @@
+name: Daily WebSocket Test with Notification
+
+on:
+  schedule:
+    - cron: '0 10 * * *'  # 每天10点运行 (UTC)
+  workflow_dispatch:       # 允许手动触发
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. 拉取代码
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    # 2. 构建并启动 Docker 容器
+    - name: Build and start Docker container
+      run: |
+        docker build -t dy-danmu .
+        docker run -d -p 4200:4200 --name dy-danmu-container dy-danmu
+        sleep 30
+
+    # 3. 安装 wscat
+    - name: Install wscat
+      run: npm install -g wscat
+
+    # 4. 创建输出目录
+    - name: Create output directory
+      run: mkdir -p output
+
+    # 5. 执行 WebSocket 测试并检测结果
+    - name: Test WebSocket connection
+      id: ws-test
+      run: |
+        echo "=== Starting WebSocket test at $(date) ==="
+
+        timeout 60 wscat -c ws://127.0.0.1:4200 \
+          -x '{"url":"https://live.douyin.com/646454278948"}' \
+          > output/test_result.txt 2>&1
+
+        WS_EXIT_CODE=$?
+        echo "=== WebSocket exit code: $WS_EXIT_CODE ==="
+
+        echo "=== Output content ==="
+        cat output/test_result.txt
+        echo "=== End of output ==="
+
+        # 检测是否拿到数据
+        if grep -q '"method":"Webcast' output/test_result.txt; then
+          echo "test_status=success" >> $GITHUB_OUTPUT
+          echo "has_data=true" >> $GITHUB_OUTPUT
+        else
+          echo "test_status=failed" >> $GITHUB_OUTPUT
+          echo "has_data=false" >> $GITHUB_OUTPUT
+        fi
+
+    # 6. 上传测试结果 artifact
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ github.run_number }}
+        path: output/test_result.txt
+        retention-days: 7
+
+    # 7. 清理 Docker 容器
+    - name: Cleanup Docker container
+      if: always()
+      run: |
+        docker stop dy-danmu-container || true
+        docker rm dy-danmu-container || true
+
+    # 8. 成功时：更新 README.md
+    - name: Update README on success
+      if: steps.ws-test.outputs.test_status == 'success'
+      run: |
+        TODAY=$(date +%Y-%m-%d)
+
+        # 检查是否当天已有记录
+        if grep -q "$TODAY.*弹幕抓取" README.md; then
+          echo "今日已有记录，跳过更新"
+        else
+          # 在第一个更新日志之前插入新记录
+          if grep -q "^### [0-9]" README.md; then
+            sed -i "0,/^### [0-9]/{s/^### \([0-9-]*\) 更新/\n### $TODAY 更新：弹幕抓取正常\n\n### \1 更新/}" README.md
+          else
+            echo "### $TODAY 更新：弹幕抓取正常" >> README.md
+          fi
+          echo "README.md 已更新：$TODAY"
+        fi
+
+    # 9. 提交 README 更新
+    - name: Commit README changes
+      if: steps.ws-test.outputs.test_status == 'success'
+      uses: EndBug/add-and-commit@v9
+      with:
+        add: README.md
+        message: "docs: 自动更新 - $(date +%Y-%m-%d) 弹幕抓取正常"
+        author_name: github-actions[bot]
+        author_email: github-actions[bot]@users.noreply.github.com
+
+    # 10. 失败时：发送邮件通知
+    - name: Send failure email
+      if: steps.ws-test.outputs.test_status == 'failed'
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: ${{ secrets.SMTP_SERVER }}
+        server_port: ${{ secrets.SMTP_PORT }}
+        username: ${{ secrets.SMTP_USERNAME }}
+        password: ${{ secrets.SMTP_PASSWORD }}
+        from: ${{ secrets.MAIL_FROM }}
+        to: ${{ secrets.MAIL_TO }}
+        subject: "[Douyin-Danmu] 弹幕抓取失败 - $(date +%Y-%m-%d)"
+        html_body: |
+          <h2>抖音弹幕抓取失败通知</h2>
+          <p><strong>日期：</strong>$(date +%Y-%m-%d)</p>
+          <p><strong>运行时间：</strong>$(date)</p>
+          <p><strong>触发方式：</strong>${{ github.event_name }}</p>
+          <hr>
+          <p>请检查 Docker 容器和 WebSocket 服务是否正常运行。</p>
+          <hr>
+          <p>此邮件由 GitHub Actions 自动发送。</p>
+        attach_paths: output/test_result.txt
