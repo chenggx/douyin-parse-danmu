@@ -2,8 +2,6 @@
 
 ## 本项目仅作为个人学习项目。请勿用于非法用途。一切违法行为后果自负！
 
-### 2024-06-28 更新：抓取弹幕已经正常
-
 参考大佬项目改写 <a href="https://github.com/Sjj1024/douyin-live" target="__blank">douyin-live</a>
 
 基于<a href="https://www.workerman.net" target="__blank">workerman</a>开发的超高性能PHP框架
