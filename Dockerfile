@@ -5,7 +5,10 @@ FROM php:7.2-cli
 WORKDIR /var/www
 
 # 安装系统依赖
-RUN apt-get update && apt-get install -y \
+RUN sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list && \
+    sed -i 's/security.debian.org/archive.debian.org/g' /etc/apt/sources.list && \
+    sed -i '/buster-updates/d' /etc/apt/sources.list && \
+    apt-get update && apt-get install -y \
     curl \
     git
 # 安装 PHP 扩展
