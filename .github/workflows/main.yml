@@ -50,8 +50,8 @@ jobs:
         cat output/test_result.txt
         echo "=== End of output ==="
 
-        # 检测是否拿到数据
-        if grep -q '"method":"Webcast' output/test_result.txt; then
+        # 检测是否拿到数据（method 在 common 对象里）
+        if grep -q '"method":"Webcast' output/test_result.txt || grep -q '"common":{"method":"Webcast' output/test_result.txt; then
           echo "test_status=success" >> $GITHUB_OUTPUT
           echo "has_data=true" >> $GITHUB_OUTPUT
         else
@@ -84,7 +84,7 @@ jobs:
           echo "今日已有记录，跳过更新"
         else
           # 根据测试结果确定状态
-          if grep -q '"method":"Webcast' output/test_result.txt; then
+          if grep -q '"method":"Webcast' output/test_result.txt || grep -q '"common":{"method":"Webcast' output/test_result.txt; then
             STATUS="正常"
           else
             STATUS="失败"
