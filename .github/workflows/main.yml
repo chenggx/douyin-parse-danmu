@@ -101,9 +101,10 @@ jobs:
         author_name: github-actions[bot]
         author_email: github-actions[bot]@users.noreply.github.com
 
-    # 10. 失败时：发送邮件通知
+    # 10. 失败时：发送邮件通知（需要配置 SMTP secrets）
     - name: Send failure email
       if: steps.ws-test.outputs.test_status == 'failed'
+      continue-on-error: true
       uses: dawidd6/action-send-mail@v3
       with:
         server_address: ${{ secrets.SMTP_SERVER }}
@@ -122,4 +123,3 @@ jobs:
           <p>请检查 Docker 容器和 WebSocket 服务是否正常运行。</p>
           <hr>
           <p>此邮件由 GitHub Actions 自动发送。</p>
-        attach_paths: output/test_result.txt
