@@ -38,7 +38,7 @@ jobs:
         echo "=== Starting WebSocket test at $(date) ==="
 
         timeout 60 wscat -c ws://127.0.0.1:4200 \
-          -x '{"url":"https://live.douyin.com/646454278948"}' \
+          -x '{"url":"https://live.douyin.com/915444250844"}' \
           > output/test_result.txt 2>&1
 
         WS_EXIT_CODE=$?
@@ -72,54 +72,36 @@ jobs:
         docker stop dy-danmu-container || true
         docker rm dy-danmu-container || true
 
-    # 8. 成功时：更新 README.md
-    - name: Update README on success
-      if: steps.ws-test.outputs.test_status == 'success'
+    # 8. 无论成功还是失败都更新 README.md
+    - name: Update README
       run: |
         TODAY=$(date +%Y-%m-%d)
 
         # 检查是否当天已有记录
-        if grep -q "$TODAY.*弹幕抓取" README.md; then
+        if grep -q "$TODAY.*抓取" README.md; then
           echo "今日已有记录，跳过更新"
         else
+          # 根据测试结果确定状态
+          if grep -q '"method":"Webcast' output/test_result.txt; then
+            STATUS="正常"
+          else
+            STATUS="失败"
+          fi
+
           # 在第一个更新日志之前插入新记录
           if grep -q "^### [0-9]" README.md; then
-            sed -i "0,/^### [0-9]/{s/^### \([0-9-]*\) 更新/\n### $TODAY 更新：弹幕抓取正常\n\n### \1 更新/}" README.md
+            sed -i "0,/^### [0-9]/{s/^### \([0-9-]*\) 更新/\n### $TODAY 更新：弹幕抓取$STATUS\n\n### \1 更新/}" README.md
           else
-            echo "### $TODAY 更新：弹幕抓取正常" >> README.md
+            echo "### $TODAY 更新：弹幕抓取$STATUS" >> README.md
           fi
-          echo "README.md 已更新：$TODAY"
+          echo "README.md 已更新：$TODAY - $STATUS"
         fi
 
     # 9. 提交 README 更新
     - name: Commit README changes
-      if: steps.ws-test.outputs.test_status == 'success'
       uses: EndBug/add-and-commit@v9
       with:
         add: README.md
-        message: "docs: 自动更新 - $(date +%Y-%m-%d) 弹幕抓取正常"
+        message: "docs: 自动更新 - $(date +%Y-%m-%d) 弹幕抓取记录"
         author_name: github-actions[bot]
         author_email: github-actions[bot]@users.noreply.github.com
-
-    # 10. 失败时：发送邮件通知（需要配置 SMTP secrets）
-    - name: Send failure email
-      if: steps.ws-test.outputs.test_status == 'failed'
-      continue-on-error: true
-      uses: dawidd6/action-send-mail@v3
-      with:
-        server_address: ${{ secrets.SMTP_SERVER }}
-        server_port: ${{ secrets.SMTP_PORT }}
-        username: ${{ secrets.SMTP_USERNAME }}
-        password: ${{ secrets.SMTP_PASSWORD }}
-        from: ${{ secrets.MAIL_FROM }}
-        to: ${{ secrets.MAIL_TO }}
-        subject: "[Douyin-Danmu] 弹幕抓取失败 - $(date +%Y-%m-%d)"
-        html_body: |
-          <h2>抖音弹幕抓取失败通知</h2>
-          <p><strong>日期：</strong>$(date +%Y-%m-%d)</p>
-          <p><strong>运行时间：</strong>$(date)</p>
-          <p><strong>触发方式：</strong>${{ github.event_name }}</p>
-          <hr>
-          <p>请检查 Docker 容器和 WebSocket 服务是否正常运行。</p>
-          <hr>
-          <p>此邮件由 GitHub Actions 自动发送。</p>
